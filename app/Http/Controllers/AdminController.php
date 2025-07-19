@@ -51,14 +51,47 @@ class AdminController extends Controller
         // Data untuk grafik perbandingan
         $comparisonData = $this->getComparisonChartData($selectedBankId, $periode, $startDate, $endDate);
 
+        // Helper untuk periode
+        $getPeriodRange = function($periode, $startDate, $endDate, $previous = false) {
+            if ($periode === 'range' && $startDate && $endDate) {
+                $start = \Carbon\Carbon::parse($startDate);
+                $end = \Carbon\Carbon::parse($endDate);
+                if ($previous) {
+                    $days = $start->diffInDays($end);
+                    $end = $start->copy()->subDay();
+                    $start = $end->copy()->subDays($days);
+                }
+                return [$start->startOfDay(), $end->endOfDay()];
+            }
+            $now = now();
+            switch ($periode) {
+                case 'harian':
+                    $baseDate = $startDate ? \Carbon\Carbon::parse($startDate) : $now;
+                    return [$baseDate->copy()->startOfDay(), $baseDate->copy()->endOfDay()];
+                case 'mingguan':
+                    $baseDate = $startDate ? \Carbon\Carbon::parse($startDate) : $now;
+                    return [$baseDate->copy()->startOfWeek(), $baseDate->copy()->endOfWeek()];
+                case 'bulanan':
+                    $baseDate = $startDate ? \Carbon\Carbon::parse($startDate) : $now;
+                    return [$baseDate->copy()->startOfMonth(), $baseDate->copy()->endOfMonth()];
+                case 'enam_bulanan':
+                    $baseDate = $startDate ? \Carbon\Carbon::parse($startDate) : $now;
+                    return [$baseDate->copy()->subMonths(6)->startOfMonth(), $baseDate->copy()->endOfMonth()];
+                case 'tahunan':
+                    $baseDate = $startDate ? \Carbon\Carbon::parse($startDate) : $now;
+                    return [$baseDate->copy()->startOfYear(), $baseDate->copy()->endOfYear()];
+                default:
+                    return [$now->copy()->startOfDay(), $now->copy()->endOfDay()];
+            }
+        };
+        [$start, $end] = $getPeriodRange($periode, $startDate, $endDate, false);
+
         // 5 transaksi terakhir (semua status, sesuai filter)
         $lastTransactions = \App\Models\Setoran::with('user')
             ->when($selectedBankId, function($q) use ($selectedBankId) {
                 $q->where('bank_sampah_id', $selectedBankId);
             })
-            ->when($startDate && $endDate, function($q) use ($startDate, $endDate) {
-                $q->whereBetween('created_at', [$startDate, $endDate]);
-            })
+            ->whereBetween('created_at', [$start, $end])
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
@@ -68,9 +101,7 @@ class AdminController extends Controller
             ->when($selectedBankId, function($q) use ($selectedBankId) {
                 $q->where('bank_sampah_id', $selectedBankId);
             })
-            ->when($startDate && $endDate, function($q) use ($startDate, $endDate) {
-                $q->whereBetween('created_at', [$startDate, $endDate]);
-            })
+            ->whereBetween('created_at', [$start, $end])
             ->get()
             ->flatMap(function($setoran) {
                 $items = is_array($setoran->items_json) ? $setoran->items_json : json_decode($setoran->items_json, true);
@@ -98,6 +129,28 @@ class AdminController extends Controller
                 ];
             })
             ->sortByDesc('total_berat')
+            ->take(5)
+            ->values()
+            ->toArray();
+
+        // Top 5 user setor (by jumlah setoran, sesuai filter)
+        $topUserSetor = \App\Models\Setoran::whereIn('status', ['selesai', 'berhasil'])
+            ->when($selectedBankId, function($q) use ($selectedBankId) {
+                $q->where('bank_sampah_id', $selectedBankId);
+            })
+            ->whereBetween('created_at', [$start, $end])
+            ->get()
+            ->groupBy('user_id')
+            ->map(function($group) {
+                $user = $group->first()->user;
+                return [
+                    'user_id' => $user->id ?? null,
+                    'name' => $user->name ?? '-',
+                    'total_setoran' => $group->count(),
+                    'total_nilai' => $group->sum('aktual_total'),
+                ];
+            })
+            ->sortByDesc('total_setoran')
             ->take(5)
             ->values()
             ->toArray();
@@ -241,6 +294,7 @@ class AdminController extends Controller
             'recentSetoran','recentUsers','recentEvents','recentArticles','eventStats','deleteRequests',
             'lastTransactions',
             'topSampahSetor',
+            'topUserSetor',
         ));
     }
 

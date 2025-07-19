@@ -802,30 +802,30 @@ $fuelSaved = $fossilEnergySaved / 32; // liter bensin, 1 liter = 32 MJ
 
 <!-- ================= 2 CARD: 5 TRANSAKSI TERAKHIR & 5 TOP SAMPAH ================= -->
 <div style="display:flex;gap:1.5rem;align-items:stretch;flex-wrap:wrap;margin-top:1.5rem;width:100%;">
-  <!-- Card 5 Transaksi Terakhir -->
-  <div style="flex:1 1 0;min-width:0;background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,0.06);padding:1.5rem 1.2rem 1.2rem 1.2rem;display:flex;flex-direction:column;">
-    <div style="font-size:1.08rem;font-weight:700;color:#1f2937;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;">
-      <i class="fa-solid fa-receipt" style="color:#2dd4bf;font-size:1.1em;"></i>Transaksi Terakhir
+  <!-- Card 5 Transaksi Terakhir (lebih lebar) -->
+  <div style="flex:2 1 0;min-width:260px;background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.04);padding:1rem 0.7rem 0.7rem 0.7rem;display:flex;flex-direction:column;">
+    <div style="font-size:0.98rem;font-weight:700;color:#1f2937;margin-bottom:0.7rem;display:flex;align-items:center;gap:0.4rem;">
+      <i class="fa-solid fa-receipt" style="color:#2dd4bf;font-size:1em;"></i>Transaksi Terakhir
     </div>
     <div style="overflow-x:auto;">
-      <table style="width:100%;border-collapse:collapse;font-size:0.97em;">
+      <table style="width:100%;border-collapse:collapse;font-size:0.89em;">
         <thead>
           <tr style="color:#6b7280;font-weight:600;text-align:left;">
-            <th style="padding:6px 4px;">Tanggal</th>
-            <th style="padding:6px 4px;">User</th>
-            <th style="padding:6px 4px;">Tipe</th>
-            <th style="padding:6px 4px;">Total</th>
-            <th style="padding:6px 4px;">Status</th>
+            <th style="padding:4px 2px;">Tanggal</th>
+            <th style="padding:4px 2px;">User</th>
+            <th style="padding:4px 2px;">Tipe</th>
+            <th style="padding:4px 2px;">Total</th>
+            <th style="padding:4px 2px;">Status</th>
           </tr>
         </thead>
         <tbody>
           @foreach(($lastTransactions ?? []) as $trx)
             <tr style="border-top:1px solid #f3f4f6;">
-              <td style="padding:6px 4px;white-space:nowrap;">{{ $trx->created_at->format('d M Y H:i') }}</td>
-              <td style="padding:6px 4px;">{{ $trx->user->name ?? '-' }}</td>
-              <td style="padding:6px 4px;">{{ method_exists($trx, 'getTipeSetorTextAttribute') ? $trx->tipe_setor_text : ucfirst($trx->tipe_setor) }}</td>
-              <td style="padding:6px 4px;">Rp{{ number_format($trx->aktual_total ?? $trx->estimasi_total,0,',','.') }}</td>
-              <td style="padding:6px 4px;">
+              <td style="padding:4px 2px;white-space:nowrap;">{{ $trx->created_at->format('d M Y H:i') }}</td>
+              <td style="padding:4px 2px;">{{ $trx->user->name ?? '-' }}</td>
+              <td style="padding:4px 2px;">{{ method_exists($trx, 'getTipeSetorTextAttribute') ? $trx->tipe_setor_text : ucfirst($trx->tipe_setor) }}</td>
+              <td style="padding:4px 2px;">Rp{{ number_format($trx->aktual_total ?? $trx->estimasi_total,0,',','.') }}</td>
+              <td style="padding:4px 2px;">
                 <span style="font-size:0.93em;font-weight:600;color:
                   @if($trx->status=='selesai'||$trx->status=='berhasil')#22c55e
                   @elseif($trx->status=='batal')#ef4444
@@ -836,52 +836,81 @@ $fuelSaved = $fossilEnergySaved / 32; // liter bensin, 1 liter = 32 MJ
             </tr>
           @endforeach
           @if(empty($lastTransactions) || count($lastTransactions) == 0)
-            <tr><td colspan="4" style="padding:10px 0;color:#9ca3af;text-align:center;">Belum ada transaksi</td></tr>
+            <tr><td colspan="5" style="padding:8px 0;color:#9ca3af;text-align:center;">Belum ada transaksi</td></tr>
           @endif
         </tbody>
       </table>
     </div>
   </div>
-
-  <!-- Card 5 Top Sampah Disetor -->
-  <div style="flex:1 1 0;min-width:0;background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,0.06);padding:1.5rem 1.2rem 1.2rem 1.2rem;display:flex;flex-direction:column;">
-    <div style="font-size:1.08rem;font-weight:700;color:#1f2937;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;">
-      <i class="fa-solid fa-dumpster" style="color:#2dd4bf;font-size:1.1em;"></i>Top Sampah Disetor
-    </div>
-    <div style="overflow-x:auto;">
-      <table style="width:100%;border-collapse:collapse;font-size:0.97em;">
-        <thead>
-          <tr style="color:#6b7280;font-weight:600;text-align:left;">
-            <th style="padding:6px 4px;">Gambar</th>
-            <th style="padding:6px 4px;">Nama Sampah</th>
-            <th style="padding:6px 4px;">Total Berat</th>
-            <th style="padding:6px 4px;">Jumlah Transaksi</th>
+<!-- Card Top User Setor (lebih ramping) -->
+<div style="flex:1.5 1 0;min-width:180px;background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.04);padding:1rem 0.7rem 0.7rem 0.7rem;display:flex;flex-direction:column;">
+  <div style="font-size:0.98rem;font-weight:700;color:#1f2937;margin-bottom:0.7rem;display:flex;align-items:center;gap:0.4rem;">
+    <i class="fa-solid fa-user" style="color:#2dd4bf;font-size:1em;"></i>Top User Setor
+  </div>
+  <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:0.89em;">
+      <thead>
+        <tr style="color:#6b7280;font-weight:600;text-align:left;">
+          <th style="padding:4px 2px;">Nama User</th>
+          <th style="padding:4px 2px;">Setoran</th>
+          <th style="padding:4px 2px;">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach(($topUserSetor ?? []) as $user)
+          <tr style="border-top:1px solid #f3f4f6;">
+            <td style="padding:4px 2px;">{{ $user['name'] ?? '-' }}</td>
+            <td style="padding:4px 2px;">{{ $user['total_setoran'] }}</td>
+            <td style="padding:4px 2px;">Rp{{ number_format($user['total_nilai'],0,',','.') }}</td>
           </tr>
-        </thead>
-        <tbody>
-          @foreach(($topSampahSetor ?? []) as $item)
-            <tr style="border-top:1px solid #f3f4f6;">
-              <td style="padding:6px 4px;text-align:center;">
-                @if(!empty($item['gambar']))
-                  <img src="{{ $item['gambar'] }}" alt="{{ $item['nama'] }}" style="width:32px;height:32px;object-fit:cover;border-radius:50%;background:#f3f4f6;">
-                @else
-                  <span style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:#f3f4f6;color:#a3a3a3;font-size:1.2em;">
-                    <i class="fa-solid fa-recycle"></i>
-                  </span>
-                @endif
-              </td>
-              <td style="padding:6px 4px;">{{ $item['nama'] ?? '-' }}</td>
-              <td style="padding:6px 4px;">{{ number_format($item['total_berat'], 2, ',', '.') }} <span style="color:#6b7280;font-size:0.97em;">{{ $item['satuan'] ?? (str_contains(strtolower($item['nama'] ?? ''), 'unit') ? 'unit' : 'kg') }}</span></td>
-              <td style="padding:6px 4px;">{{ $item['jumlah_transaksi'] }}</td>
-            </tr>
-          @endforeach
-          @if(empty($topSampahSetor) || count($topSampahSetor) == 0)
-            <tr><td colspan="3" style="padding:10px 0;color:#9ca3af;text-align:center;">Belum ada data</td></tr>
-          @endif
-        </tbody>
-      </table>
-    </div>
-    </div>
+        @endforeach
+        @if(empty($topUserSetor) || count($topUserSetor) == 0)
+          <tr><td colspan="3" style="padding:8px 0;color:#9ca3af;text-align:center;">Belum ada data</td></tr>
+        @endif
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Card Top Sampah Setor (lebih ramping) -->
+<div style="flex:1.3 1 0;min-width:180px;background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.04);padding:1rem 0.7rem 0.7rem 0.7rem;display:flex;flex-direction:column;">
+  <div style="font-size:0.98rem;font-weight:700;color:#1f2937;margin-bottom:0.7rem;display:flex;align-items:center;gap:0.4rem;">
+    <i class="fa-solid fa-dumpster" style="color:#2dd4bf;font-size:1em;"></i>Top Sampah Disetor
+  </div>
+  <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:0.89em;">
+      <thead>
+        <tr style="color:#6b7280;font-weight:600;text-align:left;">
+          <th style="padding:4px 2px;">Gambar</th>
+          <th style="padding:4px 2px;">Nama</th>
+          <th style="padding:4px 2px;">Berat</th>
+          <th style="padding:4px 2px;">Transaksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach(($topSampahSetor ?? []) as $item)
+          <tr style="border-top:1px solid #f3f4f6;">
+            <td style="padding:4px 2px;text-align:center;">
+              @if(!empty($item['gambar']))
+                <img src="{{ $item['gambar'] }}" alt="{{ $item['nama'] }}" style="width:22px;height:22px;object-fit:cover;border-radius:50%;background:#f3f4f6;">
+              @else
+                <span style="width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:#f3f4f6;color:#a3a3a3;font-size:1em;">
+                  <i class="fa-solid fa-recycle"></i>
+                </span>
+              @endif
+            </td>
+            <td style="padding:4px 2px;">{{ $item['nama'] ?? '-' }}</td>
+            <td style="padding:4px 2px;">{{ number_format($item['total_berat'], 2, ',', '.') }} <span style="color:#6b7280;font-size:0.97em;">{{ $item['satuan'] ?? (str_contains(strtolower($item['nama'] ?? ''), 'unit') ? 'unit' : 'kg') }}</span></td>
+            <td style="padding:4px 2px;">{{ $item['jumlah_transaksi'] }}</td>
+          </tr>
+        @endforeach
+        @if(empty($topSampahSetor) || count($topSampahSetor) == 0)
+          <tr><td colspan="4" style="padding:8px 0;color:#9ca3af;text-align:center;">Belum ada data</td></tr>
+        @endif
+      </tbody>
+    </table>
+  </div>
+</div>
 </div>
 
 <!-- Responsive helper -->
