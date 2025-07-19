@@ -1437,14 +1437,18 @@
             noResults.style.display = 'none';
             paginationContainer.style.display = 'flex';
 
-            // Use all articles from the current page
             tbody.innerHTML = filteredArticles.map(article => `
                 <tr>
                     <td class="checkbox-cell">
                         <input type="checkbox" class="article-checkbox" value="${article.id}" onchange="updateSelectedArticles()">
                     </td>
                     <td class="image-cell">
-                        <img src="${article.image}" alt="${article.title}" class="article-image">
+                        ${article.image ? `
+                            <img src="${article.image}" alt="${article.title}" class="article-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div style="width:100px;height:56px;background:#f3f4f6;border-radius:6px;display:none;align-items:center;justify-content:center;color:#9ca3af;font-size:10px;text-align:center;">No Image</div>
+                        ` : `
+                            <div style="width:100px;height:56px;background:#f3f4f6;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:10px;text-align:center;">No Image</div>
+                        `}
                     </td>
                     <td class="title-cell">
                         <div class="article-title">${article.title}</div>
