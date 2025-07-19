@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tambah Sampah - Admin Panel</title>
     <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet"/>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         * {
@@ -273,6 +274,12 @@
             background: #E3F4F1;
         }
 
+        .file-input-label.dragover {
+            background-color: #f0f9ff;
+            border-color: #39746E;
+            transform: scale(1.02);
+        }
+
         .preview-image {
             max-width: 200px;
             max-height: 200px;
@@ -387,6 +394,17 @@
         </div>
     </div>
 
+    <!-- Modal Crop -->
+    <div id="cropModal" style="display:none;position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
+      <div style="background:#fff;padding:20px;border-radius:8px;max-width:90vw;max-height:90vh;">
+        <img id="cropImage" style="max-width:80vw;max-height:70vh;">
+        <div style="margin-top:10px;text-align:right;display:flex;gap:8px;justify-content:flex-end;">
+          <button type="button" id="cropCancelBtn" style="padding:8px 16px;background:transparent;border:1px solid #FDCED1;border-radius:8px;font-family:'Urbanist',sans-serif;font-size:14px;font-weight:600;color:#F73541;cursor:pointer;transition:all 0.2s;">Batal</button>
+          <button type="button" id="cropOkBtn" style="padding:8px 16px;background:#39746E;border:none;border-radius:8px;font-family:'Urbanist',sans-serif;font-size:14px;font-weight:600;color:#DFF0EE;cursor:pointer;transition:all 0.2s;">OK</button>
+        </div>
+      </div>
+    </div>
+
     <header class="header">
         <div class="header-left">
             <h1>Sampah</h1>
@@ -463,7 +481,14 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script>
+        let cropper;
+        const input = document.getElementById('gambar');
+        const modal = document.getElementById('cropModal');
+        const cropImg = document.getElementById('cropImage');
+        const preview = document.getElementById('preview');
+
         // Loading utility functions
         function showLoading(message = 'Memuat data...') {
             const overlay = document.getElementById('pageLoadingOverlay');
@@ -502,25 +527,14 @@
         // File input handling
         document.getElementById('gambar').addEventListener('change', function(e) {
             const file = e.target.files[0];
-            const label = document.getElementById('fileLabel');
-            const text = document.getElementById('fileText');
-            const preview = document.getElementById('preview');
-
             if (file) {
-                text.textContent = file.name;
-                label.classList.add('has-file');
-
-                // Show preview
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                }
-                reader.readAsDataURL(file);
-            } else {
-                text.textContent = 'Klik untuk memilih gambar atau drag & drop';
-                label.classList.remove('has-file');
-                preview.style.display = 'none';
+                const url = URL.createObjectURL(file);
+                cropImg.src = url;
+                modal.style.display = 'flex';
+                if (cropper) cropper.destroy();
+                setTimeout(() => {
+                    cropper = new Cropper(cropImg, { viewMode: 1 });
+                }, 100);
             }
         });
 
@@ -568,6 +582,77 @@
                 hideButtonLoading();
                 alert('Terjadi kesalahan saat membuat sampah');
             });
+        }
+
+        // Crop modal event listeners
+        document.getElementById('cropCancelBtn').onclick = function() {
+            modal.style.display = 'none';
+            if (cropper) cropper.destroy();
+            input.value = '';
+            preview.src = '';
+            preview.style.display = 'none';
+            document.getElementById('fileText').textContent = 'Klik untuk memilih gambar atau drag & drop';
+            document.getElementById('fileLabel').classList.remove('has-file');
+        };
+
+        document.getElementById('cropOkBtn').onclick = function() {
+            if (cropper) {
+                cropper.getCroppedCanvas().toBlob(function(blob) {
+                    const file = new File([blob], 'sampah-cropped.jpg', { type: 'image/jpeg' });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    input.files = dataTransfer.files;
+                    const url = URL.createObjectURL(blob);
+                    preview.src = url;
+                    preview.style.display = 'block';
+                    document.getElementById('fileText').textContent = file.name;
+                    document.getElementById('fileLabel').classList.add('has-file');
+                    modal.style.display = 'none';
+                    cropper.destroy();
+                }, 'image/jpeg');
+            }
+        };
+
+        // Drag and drop functionality
+        const fileLabel = document.getElementById('fileLabel');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileLabel.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileLabel.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileLabel.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight(e) {
+            fileLabel.classList.add('dragover');
+        }
+        
+        function unhighlight(e) {
+            fileLabel.classList.remove('dragover');
+        }
+        
+        fileLabel.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                document.getElementById('gambar').files = files;
+                // Trigger the change event
+                const event = new Event('change', { bubbles: true });
+                document.getElementById('gambar').dispatchEvent(event);
+            }
         }
     </script>
 </body>
