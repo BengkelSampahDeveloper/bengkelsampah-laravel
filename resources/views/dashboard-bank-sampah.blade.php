@@ -947,6 +947,7 @@
                         <th>Penanggung Jawab</th>
                         <th>Kontak</th>
                         <th>Tipe Layanan</th>
+                        <th>Maps</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -990,6 +991,15 @@
                                 <span style="color: #DC2626; font-weight: 600; font-size: 12px;">Tempat</span>
                             @else
                                 <span style="color: #7C3AED; font-weight: 600; font-size: 12px;">Keduanya</span>
+                            @endif
+                        </td>
+                        <td class="maps-cell">
+                            @if($bank->gmaps_link)
+                                <a href="{{ $bank->gmaps_link }}" target="_blank" class="maps-link">
+                                    <span style="color: #39746E; font-weight: 600; font-size: 12px; text-decoration: underline; cursor: pointer;">Lihat Maps</span>
+                                </a>
+                            @else
+                                <span style="color: #9ca3af; font-size: 12px;">-</span>
                             @endif
                         </td>
                         <td>

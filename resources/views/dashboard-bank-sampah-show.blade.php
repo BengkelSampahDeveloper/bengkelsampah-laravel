@@ -198,6 +198,9 @@
             border-radius: 12px;
             font-size: 13px;
             font-weight: 700;
+        }
+
+
             margin-left: 6px;
             border: 1.5px solid;
             background: transparent;
@@ -638,6 +641,18 @@
                                     <span class="status-badge status-tempat">Tempat Saja</span>
                             @else
                                     <span class="status-badge status-keduanya">Keduanya</span>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Google Maps</span>
+                        <div class="info-value">
+                            @if($bankSampah->gmaps_link)
+                                <a href="{{ $bankSampah->gmaps_link }}" target="_blank" style="color: #39746E; text-decoration: underline; font-weight: 600;">
+                                    Lihat Maps
+                                </a>
+                            @else
+                                <span style="color: #9ca3af;">Tidak ada link maps</span>
                             @endif
                         </div>
                     </div>

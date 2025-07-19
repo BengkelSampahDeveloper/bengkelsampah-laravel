@@ -18,6 +18,7 @@ class BankSampah extends Model
         'nama_penanggung_jawab',
         'kontak_penanggung_jawab',
         'foto',
+        'gmaps_link',
         'tipe_layanan',
     ];
 

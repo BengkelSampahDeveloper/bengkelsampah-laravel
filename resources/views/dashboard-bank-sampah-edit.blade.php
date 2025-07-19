@@ -435,6 +435,13 @@
                 </div>
 
                 <div class="form-group">
+                    <label class="form-label">Link Google Maps</label>
+                    <input type="url" class="form-input" name="gmaps_link" placeholder="https://maps.google.com/..." value="{{ $bankSampah->gmaps_link ?? '' }}">
+                    <div class="error-message" id="gmaps_link_error"></div>
+                    <small style="color: #6B7271; font-size: 12px;">Masukkan link Google Maps lokasi bank sampah (opsional)</small>
+                </div>
+
+                <div class="form-group">
                     <label class="form-label">Tipe Layanan *</label>
                     <select class="form-input" name="tipe_layanan" required>
                         <option value="">Pilih tipe layanan</option>
