@@ -88,11 +88,19 @@ class DashboardUserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'identifier' => ['required', 'string', Rule::unique('users')->ignore($id), 'max:255'],
+            'poin' => 'required',
         ]);
+
+        $poinInput = str_replace([' ', '.', ','], ['', '', '.'], $request->poin); // Hapus spasi, titik ribuan, koma jadi titik
+        if (!is_numeric($poinInput)) {
+            return back()->withErrors(['poin' => 'Format poin tidak valid'])->withInput();
+        }
+        $poin = floatval($poinInput);
 
         $user->update([
             'name' => $request->name,
             'identifier' => $request->identifier,
+            'poin' => $poin,
         ]);
 
         return redirect()->route('dashboard.user')->with('success', 'Data user berhasil diperbarui');

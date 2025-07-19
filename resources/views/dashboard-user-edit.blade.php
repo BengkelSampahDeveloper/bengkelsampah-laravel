@@ -103,8 +103,12 @@
                 <div class="row">
                     <div class="col">
                         <div class="form-group">
-                            <label class="form-label">Poin</label>
-                            <input type="text" class="form-input" value="{{ number_format($user->poin) }}" disabled>
+                            <label class="form-label" for="poin">Poin</label>
+                            <input type="text" class="form-input" id="poin" name="poin" value="{{ old('poin', number_format($user->poin, 2, ',', '.')) }}" required>
+                            <small class="form-text">Masukkan nilai poin baru (gunakan koma untuk desimal, contoh: 1234,56)</small>
+                            @error('poin')
+                                <div class="form-text" style="color:#F73541;">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
                     <div class="col">
