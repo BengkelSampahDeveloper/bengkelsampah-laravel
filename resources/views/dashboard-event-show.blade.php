@@ -413,8 +413,9 @@
 
         .current-photo {
             width: 100%;
-            height: 120px;
-            object-fit: cover;
+            height: auto;
+            max-height: 120px;
+            object-fit: contain;
             display: block;
         }
 
@@ -516,7 +517,10 @@
                         </div>
                         <div class="card-body">
                             @if($event->cover)
-                            <img src="{{ $event->cover }}" alt="Event Cover" class="event-cover">
+                            <img src="{{ $event->cover }}" alt="Event Cover" class="event-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div style="width:100%;height:200px;background:#f3f4f6;border-radius:8px;display:none;align-items:center;justify-content:center;color:#9ca3af;font-size:14px;text-align:center;">No Image</div>
+                            @else
+                            <div style="width:100%;height:200px;background:#f3f4f6;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:14px;text-align:center;">No Image</div>
                             @endif
 
                             <div class="info-row">
@@ -678,7 +682,10 @@
                             <div class="info-value">
                                 <div class="result-photos">
                                     @foreach($event->result_photos as $photo)
-                                    <img src="{{ $photo }}" alt="Foto Kegiatan" class="result-photo">
+                                    <div style="position:relative;display:inline-block;margin:5px;">
+                                        <img src="{{ $photo }}" alt="Foto Kegiatan" class="result-photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div style="width:120px;height:120px;background:#f3f4f6;border-radius:8px;display:none;align-items:center;justify-content:center;color:#9ca3af;font-size:12px;text-align:center;">No Image</div>
+                                    </div>
                                     @endforeach
                                 </div>
                             </div>
@@ -748,7 +755,8 @@
                             <div class="current-photos-grid">
                                 @foreach($event->result_photos as $index => $photo)
                                 <div class="photo-item" data-photo-index="{{ $index }}">
-                                    <img src="{{ $photo }}" alt="Foto Kegiatan {{ $index + 1 }}" class="current-photo">
+                                    <img src="{{ $photo }}" alt="Foto Kegiatan {{ $index + 1 }}" class="current-photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div style="width:100%;height:120px;background:#f3f4f6;border-radius:8px;display:none;align-items:center;justify-content:center;color:#9ca3af;font-size:12px;text-align:center;">No Image</div>
                                     <button type="button" class="photo-delete-btn" onclick="deletePhoto({{ $index }})">×</button>
                                     <input type="hidden" name="existing_photos[]" value="{{ $photo }}">
                                 </div>

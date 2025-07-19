@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Event - Admin Panel</title>
     <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet"/>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         * {
@@ -267,8 +268,9 @@
 
         .image-preview img {
             width: 100%;
-            height: 200px;
-            object-fit: cover;
+            height: auto;
+            max-height: 300px;
+            object-fit: contain;
             border-radius: 8px;
         }
 
@@ -396,9 +398,6 @@
                 <div class="form-actions">
                     <button type="button" class="btn-cancel" onclick="window.history.back()">Kembali</button>
                     <button type="submit" class="btn-upload" onclick="submitForm()">Update Event</button>
-                    @if($event->status === 'active' && $event->isExpired())
-                    <button type="button" class="btn-edit" onclick="completeEvent()">Mark as Completed</button>
-                    @endif
                 </div>
             </div>
 
@@ -420,8 +419,11 @@
                     <label class="form-label">Cover Event</label>
                     @if($event->cover)
                     <div class="current-image">
-                        <img src="{{ $event->cover }}" alt="Current cover">
+                        <img src="{{ $event->cover }}" alt="Current cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div style="width:100%;height:200px;background:#f3f4f6;border-radius:8px;display:none;align-items:center;justify-content:center;color:#9ca3af;font-size:14px;text-align:center;">No Image</div>
                     </div>
+                    @else
+                    <div style="width:100%;height:200px;background:#f3f4f6;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:14px;text-align:center;">No Image</div>
                     @endif
                     <div class="upload-area" onclick="triggerFileInput()">
                         <div class="upload-icon">
@@ -434,7 +436,7 @@
                         <div class="upload-text">Pilih Gambar baru untuk event</div>
                         <div class="upload-subtext">Format: JPG, PNG, WebP (Max: 2MB)</div>
                     </div>
-                    <input type="file" id="coverInput" name="cover" class="file-input" accept="image/*" onchange="previewImage(this)">
+                    <input type="file" id="coverInput" name="cover" class="file-input" accept="image/*">
                     <div class="image-preview" id="imagePreview">
                         <img id="previewImg" src="" alt="Preview">
                         <button type="button" class="image-remove" onclick="removeImage()">&times;</button>
@@ -500,7 +502,26 @@
         </div>
     </div>
 
+    <!-- Modal Crop -->
+    <div id="cropModal" style="display:none;position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
+      <div style="background:#fff;padding:20px;border-radius:8px;max-width:90vw;max-height:90vh;">
+        <img id="cropImage" style="max-width:80vw;max-height:70vh;">
+        <div style="margin-top:10px;text-align:right;display:flex;gap:8px;justify-content:flex-end;">
+          <button type="button" id="cropCancelBtn" style="padding:8px 16px;background:transparent;border:1px solid #FDCED1;border-radius:8px;font-family:'Urbanist',sans-serif;font-size:14px;font-weight:600;color:#F73541;cursor:pointer;transition:all 0.2s;">Batal</button>
+          <button type="button" id="cropOkBtn" style="padding:8px 16px;background:#39746E;border:none;border-radius:8px;font-family:'Urbanist',sans-serif;font-size:14px;font-weight:600;color:#DFF0EE;cursor:pointer;transition:all 0.2s;">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script>
+        let cropper;
+        const input = document.getElementById('coverInput');
+        const modal = document.getElementById('cropModal');
+        const cropImg = document.getElementById('cropImage');
+        const previewDiv = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+
         // Loading utility functions
         function showLoading(message = 'Memproses...') {
             const overlay = document.getElementById('pageLoadingOverlay');
@@ -578,17 +599,7 @@
             document.getElementById('coverInput').click();
         }
 
-        function previewImage(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('previewImg').src = e.target.result;
-                    document.getElementById('imagePreview').style.display = 'block';
-                    document.querySelector('.upload-area').style.display = 'none';
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
+
 
         function removeImage() {
             document.getElementById('coverInput').value = '';
@@ -646,40 +657,85 @@
             document.querySelector('input[name="end_datetime"]').min = this.value;
         });
 
-        // Handle complete event
-        function completeEvent() {
-            if (confirm('Apakah Anda yakin ingin mengubah status event ini menjadi completed?')) {
-                // Show loading
-                showLoading('Mengubah status event...');
-                
-                fetch('{{ route("dashboard.event.complete", $event->id) }}', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showAlert('success', data.message);
-                        setTimeout(() => {
-                            window.location.href = '{{ route("dashboard.event.show", $event->id) }}';
-                        }, 1500);
-                    } else {
-                        showAlert('error', data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showAlert('error', 'Terjadi kesalahan saat mengubah status event');
-                })
-                .finally(() => {
-                    // Hide loading
-                    hideLoading();
-                });
+        // Crop modal event listeners
+        document.getElementById('cropCancelBtn').onclick = function() {
+            modal.style.display = 'none';
+            if (cropper) cropper.destroy();
+            input.value = '';
+            previewImg.src = '';
+            previewDiv.style.display = 'none';
+            document.querySelector('.upload-area').style.display = 'block';
+        };
+
+        document.getElementById('cropOkBtn').onclick = function() {
+            if (cropper) {
+                cropper.getCroppedCanvas().toBlob(function(blob) {
+                    const file = new File([blob], 'cover-cropped.jpg', { type: 'image/jpeg' });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    input.files = dataTransfer.files;
+                    const url = URL.createObjectURL(blob);
+                    previewImg.src = url;
+                    previewDiv.style.display = 'block';
+                    document.querySelector('.upload-area').style.display = 'none';
+                    modal.style.display = 'none';
+                    cropper.destroy();
+                }, 'image/jpeg');
+            }
+        };
+
+        // Drag and drop functionality
+        const uploadArea = document.querySelector('.upload-area');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight(e) {
+            uploadArea.classList.add('dragover');
+        }
+        
+        function unhighlight(e) {
+            uploadArea.classList.remove('dragover');
+        }
+        
+        uploadArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                document.getElementById('coverInput').files = files;
+                // previewImage(document.getElementById('coverInput')); // Hapus/disable fungsi previewImage dari onchange input file
             }
         }
+
+        input.addEventListener('change', function(e) {
+          const file = e.target.files[0];
+          if (file) {
+            const url = URL.createObjectURL(file);
+            cropImg.src = url;
+            modal.style.display = 'flex';
+            if (cropper) cropper.destroy();
+            setTimeout(() => {
+              cropper = new Cropper(cropImg, { viewMode: 1 });
+            }, 100);
+          }
+        });
     </script>
 </body>
 </html>

@@ -1564,8 +1564,9 @@
                         <input type="checkbox" class="event-checkbox" value="${event.id}" onchange="updateSelectedEvents()">
                     </td>
                     <td class="image-cell">
-                        ${event.image ? `<img src="${event.image}" alt="${event.title}" class="event-image">` : 
+                        ${event.image ? `<img src="${event.image}" alt="${event.title}" class="event-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : 
                           '<div style="width:100px;height:56px;background:#f8f9fa;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#6c757d;font-size:12px;">No Image</div>'}
+                        <div style="width:100px;height:56px;background:#f8f9fa;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#6c757d;font-size:12px;display:none;">No Image</div>
                     </td>
                     <td class="title-cell">
                         <div class="event-title">${event.title}</div>
