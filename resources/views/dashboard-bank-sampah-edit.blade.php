@@ -353,9 +353,9 @@
                             <img src="{{ $bankSampah->foto }}" alt="Foto Bank Sampah" style="max-width: 200px; max-height: 150px; border-radius: 8px;">
                         </div>
                     @endif
-                    <input type="file" class="form-input" name="foto" accept=".webp" id="foto">
+                    <input type="file" class="form-input" name="foto" accept=".jpeg,.jpg,.png,.webp" id="foto">
                     <div class="error-message" id="foto_error"></div>
-                    <small style="color: #6B7271; font-size: 12px;">Format: WebP, Maksimal: 1MB. Kosongkan jika tidak ingin mengubah foto.</small>
+                    <small style="color: #6B7271; font-size: 12px;">Format: JPEG, PNG, JPG, atau WebP. Maksimal: 2MB. Kosongkan jika tidak ingin mengubah foto.</small>
                 </div>
 
                 <div class="form-group">

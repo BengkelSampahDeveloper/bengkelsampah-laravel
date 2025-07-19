@@ -337,9 +337,9 @@
 
                 <div class="form-group">
                     <label class="form-label">Foto Bank Sampah</label>
-                    <input type="file" class="form-input" name="foto" accept=".webp" id="foto">
+                    <input type="file" class="form-input" name="foto" accept=".jpeg,.jpg,.png,.webp" id="foto">
                     <div class="error-message" id="foto_error"></div>
-                    <small style="color: #6B7271; font-size: 12px;">Format: WebP, Maksimal: 1MB</small>
+                    <small style="color: #6B7271; font-size: 12px;">Format: JPEG, PNG, JPG, atau WebP. Maksimal: 2MB</small>
                 </div>
 
                 <div class="form-group">

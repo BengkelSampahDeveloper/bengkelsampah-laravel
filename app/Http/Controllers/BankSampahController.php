@@ -64,7 +64,7 @@ class BankSampahController extends Controller
                 'alamat_bank_sampah' => 'required|string',
                 'nama_penanggung_jawab' => 'required|string|max:255',
                 'kontak_penanggung_jawab' => 'required|string|max:255',
-                'foto' => 'nullable|image|mimes:webp|max:1024',
+                'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
                 'tipe_layanan' => 'required|in:jemput,tempat,keduanya',
             ]);
 
@@ -72,7 +72,7 @@ class BankSampahController extends Controller
 
             if ($request->hasFile('foto')) {
                 $file = $request->file('foto');
-                $filename = time() . '_' . Str::random(10) . '_' . Str::slug($request->nama_bank_sampah) . '.webp';
+                $filename = time() . '_' . Str::random(10) . '_' . Str::slug($request->nama_bank_sampah) . '.' . $file->getClientOriginalExtension();
                 
                 // Create directory if it doesn't exist
                 $uploadPath = base_path('../uploads/bank_sampah');
@@ -220,7 +220,7 @@ class BankSampahController extends Controller
                 'alamat_bank_sampah' => 'required|string',
                 'nama_penanggung_jawab' => 'required|string|max:255',
                 'kontak_penanggung_jawab' => 'required|string|max:255',
-                'foto' => 'nullable|image|mimes:webp|max:1024',
+                'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
                 'tipe_layanan' => 'required|in:jemput,tempat,keduanya',
             ]);
 
@@ -237,7 +237,7 @@ class BankSampahController extends Controller
                 }
 
                 $file = $request->file('foto');
-                $filename = time() . '_' . Str::random(10) . '_' . Str::slug($request->nama_bank_sampah) . '.webp';
+                $filename = time() . '_' . Str::random(10) . '_' . Str::slug($request->nama_bank_sampah) . '.' . $file->getClientOriginalExtension();
                 
                 // Create directory if it doesn't exist
                 $uploadPath = base_path('../uploads/bank_sampah');
