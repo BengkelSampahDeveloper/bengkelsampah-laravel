@@ -259,7 +259,7 @@
                         <td><strong>{{ $redeem->user_name }}</strong></td>
                         <td>{{ $redeem->user_identifier }}</td>
                         <td>
-                            <span class="point-badge">{{ number_format(abs($redeem->jumlah_point)) }} Poin</span>
+                            <span class="point-badge">{{ number_format(abs($redeem->jumlah_point), 2, ',', '.') }} Poin</span>
                         </td>
                         <td>{{ $redeem->keterangan }}</td>
                         <td>

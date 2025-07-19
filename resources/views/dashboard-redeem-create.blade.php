@@ -516,31 +516,39 @@
             </div>
         </div>
 
-        <!-- Search Section -->
-        <div class="form-group">
-            <label class="form-label">Cari User</label>
-            <div class="search-box">
-                <input type="text" class="search-input" id="searchUser" placeholder="Cari user berdasarkan nama atau identifier..." onkeypress="handleSearchKeypress(event)">
-                <svg class="search-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="#6B7271" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+        <!-- Section Search User -->
+        <div id="userSearchSection">
+            <div class="form-group">
+                <label for="searchUser" class="form-label">Cari User</label>
+                <div class="search-box">
+                    <input type="text" class="search-input" id="searchUser" placeholder="Cari nama, email, atau identifier...">
+                    <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                </div>
+                <div id="searchResults" class="list-group" style="display:none;"></div>
             </div>
         </div>
-
-        <!-- Search Results -->
-        <div id="searchResults" style="display: none;">
-            <h6 style="margin-bottom: 1rem; color: #39746E; font-weight: 600;">Hasil Pencarian:</h6>
-            <div id="userList" class="list-group"></div>
+        <!-- Section User Terpilih -->
+        <div id="selectedUserSection" style="display:none;">
+            <div class="form-group">
+                <label class="form-label">User</label>
+                <div class="selected-user" style="display:flex;align-items:center;gap:1rem;">
+                    <div>
+                        <span class="user-name" id="selectedUserName"></span><br>
+                        <small class="text-muted" id="selectedUserIdentifier"></small>
+                    </div>
+                    <button type="button" class="btn btn-secondary" id="changeUserBtn">Ganti User</button>
+                </div>
+            </div>
         </div>
-
         <!-- Redeem Form -->
         <div id="redeemForm" style="display: none;">
             <form id="redeemPointForm" enctype="multipart/form-data">
-                <input type="hidden" id="userId" name="user_id">
+                <input type="hidden" id="user_id" name="user_id">
                 
                 <div class="form-group">
                     <label for="jumlahPoint" class="form-label">Jumlah Poin yang Diredeem</label>
-                    <input type="number" class="form-input" id="jumlahPoint" name="jumlah_point" min="1" required>
+                    <input type="text" class="form-input" id="jumlahPoint" name="jumlah_point_display" required>
+                    <input type="hidden" id="jumlahPointRaw" name="jumlah_point">
                     <small class="form-text">Maksimal: <span id="maxPoints"></span> poin</small>
                 </div>
 
@@ -612,12 +620,11 @@
         }
 
         function displaySearchResults(users) {
-            const userList = document.getElementById('userList');
-            const searchResults = document.getElementById('searchResults');
+            const userList = document.getElementById('searchResults');
             
             if (users.length === 0) {
                 userList.innerHTML = '<div class="alert alert-info">Tidak ada user yang ditemukan</div>';
-                searchResults.style.display = 'block';
+                userList.style.display = 'block';
                 return;
             }
 
@@ -632,7 +639,7 @@
                             <small>${user.identifier}</small>
                         </div>
                         <div class="user-points">
-                            <span class="badge badge-success">${user.poin} Poin</span>
+                            <span class="badge badge-success">${Number(user.poin).toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 2})} Poin</span>
                             <button class="btn btn-primary" onclick="selectUser(${user.id})">
                                 Pilih
                             </button>
@@ -642,7 +649,7 @@
                 userList.appendChild(userItem);
             });
             
-            searchResults.style.display = 'block';
+            userList.style.display = 'block';
         }
 
         function selectUser(userId) {
@@ -658,8 +665,8 @@
                 }
                 
                 selectedUser = data;
-                document.getElementById('userId').value = data.id;
-                document.getElementById('maxPoints').textContent = data.poin;
+                showSelectedUser(data);
+                document.getElementById('maxPoints').textContent = Number(data.poin).toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 2});
                 document.getElementById('jumlahPoint').max = data.poin;
                 
                 // Hide search results and show form
@@ -674,6 +681,32 @@
             });
         }
 
+        function showSelectedUser(user) {
+            document.getElementById('userSearchSection').style.display = 'none';
+            document.getElementById('selectedUserSection').style.display = '';
+            document.getElementById('selectedUserName').textContent = user.name;
+            document.getElementById('selectedUserIdentifier').textContent = user.identifier;
+            document.getElementById('user_id').value = user.id;
+        }
+
+        function resetUserSelection() {
+            document.getElementById('userSearchSection').style.display = '';
+            document.getElementById('selectedUserSection').style.display = 'none';
+            document.getElementById('user_id').value = '';
+            document.getElementById('searchUser').value = '';
+            document.getElementById('searchResults').style.display = 'none';
+        }
+
+        // Pastikan event listener hanya dipasang jika tombol ada
+        setTimeout(function() {
+            var changeBtn = document.getElementById('changeUserBtn');
+            if (changeBtn) {
+                changeBtn.addEventListener('click', function() {
+                    resetUserSelection();
+                });
+            }
+        }, 100);
+
         function submitForm() {
             if (!selectedUser) {
                 showAlert('Pilih user terlebih dahulu', 'warning');
@@ -682,15 +715,19 @@
             
             const form = document.getElementById('redeemPointForm');
             const formData = new FormData(form);
-            const jumlahPoint = parseInt(formData.get('jumlah_point'));
+            let val = formData.get('jumlah_point_display');
+            val = val.replace(/\./g, '').replace(',', '.');
+            formData.set('jumlah_point', val);
             
-            if (jumlahPoint > selectedUser.poin) {
-                showAlert('Jumlah poin melebihi poin yang tersedia', 'danger');
+            const jumlahPoint = parseFloat(formData.get('jumlah_point'));
+            
+            if (isNaN(jumlahPoint) || jumlahPoint <= 0) {
+                showAlert('Jumlah poin harus lebih dari 0 dan berupa angka', 'danger');
                 return;
             }
-            
-            if (jumlahPoint <= 0) {
-                showAlert('Jumlah poin harus lebih dari 0', 'danger');
+
+            if (jumlahPoint > selectedUser.poin) {
+                showAlert('Jumlah poin melebihi poin yang tersedia', 'danger');
                 return;
             }
             
@@ -749,6 +786,21 @@
                 }
             }, 5000);
         }
+
+        // Pasang event listener pada input search agar search user berjalan saat Enter
+        document.getElementById('searchUser').addEventListener('keypress', function(event) {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            searchUser();
+          }
+        });
+
+        const form = document.getElementById('redeemPointForm');
+        form.addEventListener('submit', function(e) {
+          let val = document.getElementById('jumlahPoint').value;
+          val = val.replace(/\./g, '').replace(',', '.');
+          document.getElementById('jumlahPointRaw').value = val;
+        });
     </script>
 </body>
 </html>

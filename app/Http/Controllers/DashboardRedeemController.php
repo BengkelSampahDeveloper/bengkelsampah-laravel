@@ -89,7 +89,7 @@ class DashboardRedeemController extends Controller
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',
-            'jumlah_point' => 'required|integer|min:1',
+            'jumlah_point' => 'required|numeric|min:1',
             'alasan_redeem' => 'required|string|max:500',
             'bukti_redeem' => 'required|image|mimes:jpeg,png,jpg|max:2048'
         ]);

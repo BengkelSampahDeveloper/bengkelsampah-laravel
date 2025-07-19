@@ -931,7 +931,7 @@
                             <td>{{ $redeem->user_name }}</td>
                             <td>{{ $redeem->user_identifier }}</td>
                             <td>
-                                <span class="badge badge-danger">{{ number_format(abs($redeem->jumlah_point)) }} Poin</span>
+                                <span class="badge badge-danger">{{ number_format(abs($redeem->jumlah_point), 2, ',', '.') }} Poin</span>
                             </td>
                             <td>{{ $redeem->keterangan }}</td>
                             <td class="action-cell">

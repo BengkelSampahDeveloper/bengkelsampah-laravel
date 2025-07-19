@@ -24,7 +24,7 @@ class Point extends Model
 
     protected $casts = [
         'tanggal' => 'date',
-        'jumlah_point' => 'integer',
+        'jumlah_point' => 'decimal:2',
         'xp' => 'decimal:2',
     ];
 

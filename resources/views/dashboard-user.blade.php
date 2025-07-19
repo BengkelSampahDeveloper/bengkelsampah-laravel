@@ -715,7 +715,7 @@
                                 </td>
                                 <td>{{ $user->name }}</td>
                                 <td>{{ $user->identifier }}</td>
-                        <td>{{ number_format($user->poin, 0) }}</td>
+                        <td>{{ number_format($user->poin, 2, ',', '.') }}</td>
                         <td>{{ number_format($user->xp, 0) }}</td>
                                 <td>{{ $user->setor }}</td>
                         <td>{{ number_format($user->sampah, 1) }}</td>

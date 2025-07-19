@@ -382,7 +382,7 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-title">Total Poin</div>
-                    <div class="stat-value">{{ number_format($user->poin) }}</div>
+                    <div class="stat-value">{{ number_format($user->poin, 2, ',', '.') }}</div>
                     <div class="stat-desc">Points earned</div>
                 </div>
                 <div class="stat-card">
@@ -474,7 +474,7 @@
                             </div>
                             <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
                                 <div class="recent-amount" style="color: {{ $point->type == 'redeem' ? '#DC2626' : '#059669' }};">
-                                    {{ $point->type == 'redeem' ? '-' : '+' }}{{ number_format(abs($point->jumlah_point)) }} Poin
+                                    {{ $point->type == 'redeem' ? '-' : '+' }}{{ number_format(abs($point->jumlah_point), 2, ',', '.') }} Poin
                                 </div>
                                 <span class="status-badge {{ $point->type == 'redeem' ? 'status-batal' : 'status-selesai' }}">
                                     {{ ucfirst($point->type) }}
