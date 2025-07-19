@@ -262,25 +262,30 @@ class AdminController extends Controller
             }
             switch ($periode) {
                 case 'harian':
+                    $baseDate = $startDate ? \Carbon\Carbon::parse($startDate) : $now;
                     return $previous
-                        ? [$now->copy()->subDay()->startOfDay(), $now->copy()->subDay()->endOfDay()]
-                        : [$now->copy()->startOfDay(), $now->copy()->endOfDay()];
+                        ? [$baseDate->copy()->subDay()->startOfDay(), $baseDate->copy()->subDay()->endOfDay()]
+                        : [$baseDate->copy()->startOfDay(), $baseDate->copy()->endOfDay()];
                 case 'mingguan':
+                    $baseDate = $startDate ? \Carbon\Carbon::parse($startDate) : $now;
                     return $previous
-                        ? [$now->copy()->subWeek()->startOfWeek(), $now->copy()->subWeek()->endOfWeek()]
-                        : [$now->copy()->startOfWeek(), $now->copy()->endOfWeek()];
+                        ? [$baseDate->copy()->subWeek()->startOfWeek(), $baseDate->copy()->subWeek()->endOfWeek()]
+                        : [$baseDate->copy()->startOfWeek(), $baseDate->copy()->endOfWeek()];
                 case 'bulanan':
+                    $baseDate = $startDate ? \Carbon\Carbon::parse($startDate) : $now;
                     return $previous
-                        ? [$now->copy()->subMonth()->startOfMonth(), $now->copy()->subMonth()->endOfMonth()]
-                        : [$now->copy()->startOfMonth(), $now->copy()->endOfMonth()];
+                        ? [$baseDate->copy()->subMonth()->startOfMonth(), $baseDate->copy()->subMonth()->endOfMonth()]
+                        : [$baseDate->copy()->startOfMonth(), $baseDate->copy()->endOfMonth()];
                 case 'enam_bulanan':
+                    $baseDate = $startDate ? \Carbon\Carbon::parse($startDate) : $now;
                     return $previous
-                        ? [$now->copy()->subMonths(12)->startOfMonth(), $now->copy()->subMonths(6)->endOfMonth()]
-                        : [$now->copy()->subMonths(6)->startOfMonth(), $now->copy()->endOfMonth()];
+                        ? [$baseDate->copy()->subMonths(12)->startOfMonth(), $baseDate->copy()->subMonths(6)->endOfMonth()]
+                        : [$baseDate->copy()->subMonths(6)->startOfMonth(), $baseDate->copy()->endOfMonth()];
                 case 'tahunan':
+                    $baseDate = $startDate ? \Carbon\Carbon::parse($startDate) : $now;
                     return $previous
-                        ? [$now->copy()->subYear()->startOfYear(), $now->copy()->subYear()->endOfYear()]
-                        : [$now->copy()->startOfYear(), $now->copy()->endOfYear()];
+                        ? [$baseDate->copy()->subYear()->startOfYear(), $baseDate->copy()->subYear()->endOfYear()]
+                        : [$baseDate->copy()->startOfYear(), $baseDate->copy()->endOfYear()];
                 default:
                     return [$now->copy()->startOfDay(), $now->copy()->endOfDay()];
             }
@@ -288,32 +293,29 @@ class AdminController extends Controller
         // 1. Total User
         foreach ([false, true] as $isPrev) {
             [$start, $end] = $getPeriodRange($periode, $startDate, $endDate, $isPrev);
-            $userQuery = \App\Models\User::whereBetween('created_at', [$start, $end]);
-            if ($selectedBankId) {
-                $userQuery->whereHas('setorans', function($q) use ($selectedBankId, $start, $end) {
-                    $q->where('bank_sampah_id', $selectedBankId)
-                      ->whereBetween('created_at', [$start, $end]);
-                });
-            }
+            $userQuery = \App\Models\User::whereHas('setorans', function($q) use ($selectedBankId, $start, $end) {
+                if ($selectedBankId) {
+                    $q->where('bank_sampah_id', $selectedBankId);
+                }
+                $q->whereBetween('created_at', [$start, $end]);
+            });
             $summary['user' . ($isPrev ? '_prev' : '')] = $userQuery->count();
         }
-        // 2. Total Bank Sampah
-        $summary['bank_sampah'] = \App\Models\BankSampah::count();
-        // 3. Total Setoran Selesai
+        // 2. Total Setoran Selesai
         foreach ([false, true] as $isPrev) {
             [$start, $end] = $getPeriodRange($periode, $startDate, $endDate, $isPrev);
             $setoranQuery = \App\Models\Setoran::where('status', 'selesai')->whereBetween('created_at', [$start, $end]);
             if ($selectedBankId) $setoranQuery->where('bank_sampah_id', $selectedBankId);
             $summary['setoran' . ($isPrev ? '_prev' : '')] = $setoranQuery->count();
         }
-        // 4. Total Nilai Setoran (Aktual)
+        // 3. Total Nilai Setoran (Aktual)
         foreach ([false, true] as $isPrev) {
             [$start, $end] = $getPeriodRange($periode, $startDate, $endDate, $isPrev);
             $setoranQuery = \App\Models\Setoran::where('status', 'selesai')->whereBetween('created_at', [$start, $end]);
             if ($selectedBankId) $setoranQuery->where('bank_sampah_id', $selectedBankId);
             $summary['nilai_setoran' . ($isPrev ? '_prev' : '')] = $setoranQuery->sum('aktual_total');
         }
-        // 5. Total Poin (jumlahkan langsung aktual_total dari setoran tabung yang selesai)
+        // 4. Total Poin (jumlahkan langsung aktual_total dari setoran tabung yang selesai)
         foreach ([false, true] as $isPrev) {
             [$start, $end] = $getPeriodRange($periode, $startDate, $endDate, $isPrev);
             $setoranQuery = \App\Models\Setoran::where('status', 'selesai')
@@ -324,21 +326,7 @@ class AdminController extends Controller
             }
             $summary['poin_redeem' . ($isPrev ? '_prev' : '')] = $setoranQuery->sum('aktual_total');
         }
-        // 6. Total Jenis Sampah
-        $summary['jenis_sampah'] = \App\Models\Sampah::count();
-        // 7. Total Event
-        foreach ([false, true] as $isPrev) {
-            [$start, $end] = $getPeriodRange($periode, $startDate, $endDate, $isPrev);
-            $eventQuery = \App\Models\Event::whereBetween('created_at', [$start, $end]);
-            $summary['event' . ($isPrev ? '_prev' : '')] = $eventQuery->count();
-        }
-        // 8. Total Artikel
-        foreach ([false, true] as $isPrev) {
-            [$start, $end] = $getPeriodRange($periode, $startDate, $endDate, $isPrev);
-            $artikelQuery = \App\Models\Artikel::whereBetween('created_at', [$start, $end]);
-            $summary['artikel' . ($isPrev ? '_prev' : '')] = $artikelQuery->count();
-        }
-        // 9. Total Sampah (Kg dan Unit)
+        // 5. Total Sampah (Kg dan Unit)
         foreach ([false, true] as $isPrev) {
             [$start, $end] = $getPeriodRange($periode, $startDate, $endDate, $isPrev);
             $setoranQuery = \App\Models\Setoran::where('status', 'selesai')->whereBetween('created_at', [$start, $end]);
@@ -360,19 +348,6 @@ class AdminController extends Controller
             $summary['total_sampah_kg' . ($isPrev ? '_prev' : '')] = $totalSampahKg;
             $summary['total_sampah_unit' . ($isPrev ? '_prev' : '')] = $totalSampahUnit;
         }
-        // Hitung delta & persentase
-        $summary['user_delta'] = $summary['user'] - $summary['user_prev'];
-        $summary['user_percent'] = $summary['user_prev'] > 0 ? round((($summary['user'] - $summary['user_prev']) / $summary['user_prev']) * 100, 1) : ($summary['user'] > 0 ? 100 : 0);
-        $summary['setoran_delta'] = $summary['setoran'] - $summary['setoran_prev'];
-        $summary['setoran_percent'] = $summary['setoran_prev'] > 0 ? round((($summary['setoran'] - $summary['setoran_prev']) / $summary['setoran_prev']) * 100, 1) : ($summary['setoran'] > 0 ? 100 : 0);
-        $summary['nilai_setoran_delta'] = $summary['nilai_setoran'] - $summary['nilai_setoran_prev'];
-        $summary['nilai_setoran_percent'] = $summary['nilai_setoran_prev'] > 0 ? round((($summary['nilai_setoran'] - $summary['nilai_setoran_prev']) / $summary['nilai_setoran_prev']) * 100, 1) : ($summary['nilai_setoran'] > 0 ? 100 : 0);
-        $summary['poin_redeem_delta'] = $summary['poin_redeem'] - $summary['poin_redeem_prev'];
-        $summary['poin_redeem_percent'] = $summary['poin_redeem_prev'] > 0 ? round((($summary['poin_redeem'] - $summary['poin_redeem_prev']) / $summary['poin_redeem_prev']) * 100, 1) : ($summary['poin_redeem'] > 0 ? 100 : 0);
-        $summary['event_delta'] = $summary['event'] - $summary['event_prev'];
-        $summary['event_percent'] = $summary['event_prev'] > 0 ? round((($summary['event'] - $summary['event_prev']) / $summary['event_prev']) * 100, 1) : ($summary['event'] > 0 ? 100 : 0);
-        $summary['artikel_delta'] = $summary['artikel'] - $summary['artikel_prev'];
-        $summary['artikel_percent'] = $summary['artikel_prev'] > 0 ? round((($summary['artikel'] - $summary['artikel_prev']) / $summary['artikel_prev']) * 100, 1) : ($summary['artikel'] > 0 ? 100 : 0);
         return $summary;
     }
 
@@ -380,15 +355,6 @@ class AdminController extends Controller
     {
         $now = now();
         $data = [];
-        
-        // Debug: Log parameter yang diterima
-        \Log::info('ComparisonChartData Debug', [
-            'selectedBankId' => $selectedBankId,
-            'periode' => $periode,
-            'startDate' => $startDate,
-            'endDate' => $endDate,
-            'now' => $now->toDateTimeString()
-        ]);
         
         // Helper untuk mendapatkan range periode
         $getPeriodRange = function($periode, $startDate, $endDate, $previous = false) use ($now) {
@@ -405,25 +371,33 @@ class AdminController extends Controller
             
             switch ($periode) {
                 case 'harian':
+                    // FIX: Konsisten dengan logika lainnya
+                    $baseDate = $startDate ? \Carbon\Carbon::parse($startDate) : $now;
                     return $previous
-                        ? [$now->copy()->subDay()->startOfDay(), $now->copy()->subDay()->endOfDay()]
-                        : [$now->copy()->startOfDay(), $now->copy()->endOfDay()];
+                        ? [$baseDate->copy()->subDay()->startOfDay(), $baseDate->copy()->subDay()->endOfDay()]
+                        : [$baseDate->copy()->startOfDay(), $baseDate->copy()->endOfDay()];
                 case 'mingguan':
+                    // FIX: Gunakan startDate jika ada, bukan selalu $now
+                    $baseDate = $startDate ? \Carbon\Carbon::parse($startDate) : $now;
                     return $previous
-                        ? [$now->copy()->subWeek()->startOfWeek(), $now->copy()->subWeek()->endOfWeek()]
-                        : [$now->copy()->startOfWeek(), $now->copy()->endOfWeek()];
+                        ? [$baseDate->copy()->subWeek()->startOfWeek(), $baseDate->copy()->subWeek()->endOfWeek()]
+                        : [$baseDate->copy()->startOfWeek(), $baseDate->copy()->endOfWeek()];
                 case 'bulanan':
+                    // FIX: Gunakan startDate jika ada, bukan selalu $now
+                    $baseDate = $startDate ? \Carbon\Carbon::parse($startDate) : $now;
                     return $previous
-                        ? [$now->copy()->subMonth()->startOfMonth(), $now->copy()->subMonth()->endOfMonth()]
-                        : [$now->copy()->startOfMonth(), $now->copy()->endOfMonth()];
+                        ? [$baseDate->copy()->subMonth()->startOfMonth(), $baseDate->copy()->subMonth()->endOfMonth()]
+                        : [$baseDate->copy()->startOfMonth(), $baseDate->copy()->endOfMonth()];
                 case 'enam_bulanan':
+                    $baseDate = $startDate ? \Carbon\Carbon::parse($startDate) : $now;
                     return $previous
-                        ? [$now->copy()->subMonths(12)->startOfMonth(), $now->copy()->subMonths(6)->endOfMonth()]
-                        : [$now->copy()->subMonths(6)->startOfMonth(), $now->copy()->endOfMonth()];
+                        ? [$baseDate->copy()->subMonths(12)->startOfMonth(), $baseDate->copy()->subMonths(6)->endOfMonth()]
+                        : [$baseDate->copy()->subMonths(6)->startOfMonth(), $baseDate->copy()->endOfMonth()];
                 case 'tahunan':
+                    $baseDate = $startDate ? \Carbon\Carbon::parse($startDate) : $now;
                     return $previous
-                        ? [$now->copy()->subYear()->startOfYear(), $now->copy()->subYear()->endOfYear()]
-                        : [$now->copy()->startOfYear(), $now->copy()->endOfYear()];
+                        ? [$baseDate->copy()->subYear()->startOfYear(), $baseDate->copy()->subYear()->endOfYear()]
+                        : [$baseDate->copy()->startOfYear(), $baseDate->copy()->endOfYear()];
                 default:
                     return [$now->copy()->startOfDay(), $now->copy()->endOfDay()];
             }
@@ -433,28 +407,24 @@ class AdminController extends Controller
         foreach ([false, true] as $isPrev) {
             [$start, $end] = $getPeriodRange($periode, $startDate, $endDate, $isPrev);
             
-            // Debug: Log range yang dihasilkan
-            \Log::info('Period Range', [
-                'isPrev' => $isPrev,
-                'start' => $start->toDateTimeString(),
-                'end' => $end->toDateTimeString()
-            ]);
-            
             $periodData = [];
             
             // Generate data points berdasarkan periode
             if ($periode === 'harian') {
                 // 24 jam
                 for ($i = 0; $i < 24; $i++) {
-                    $hour = $start->copy()->addHours($i);
+                    // FIX: Gunakan copy() untuk menghindari modifikasi objek asli
+                    $hourStart = $start->copy()->addHours($i);
+                    $hourEnd = $start->copy()->addHours($i)->endOfHour();
+                    
                     $query = \App\Models\Setoran::where('status', 'selesai')
-                        ->whereBetween('created_at', [$hour->startOfHour(), $hour->endOfHour()]);
+                        ->whereBetween('created_at', [$hourStart, $hourEnd]);
                     if ($selectedBankId) {
                         $query->where('bank_sampah_id', $selectedBankId);
                     }
                     $total = $query->sum('aktual_total');
                     $periodData[] = [
-                        'label' => $hour->format('H:i'),
+                        'label' => $hourStart->format('H:i'),
                         'value' => (float) $total
                     ];
                 }
@@ -463,22 +433,23 @@ class AdminController extends Controller
                 for ($i = 0; $i < 7; $i++) {
                     $day = $start->copy()->addDays($i);
                     $query = \App\Models\Setoran::where('status', 'selesai')
-                        ->whereBetween('created_at', [$day->startOfDay(), $day->endOfDay()]);
+                        ->whereBetween('created_at', [$day->copy()->startOfDay(), $day->copy()->endOfDay()]);
                     if ($selectedBankId) {
                         $query->where('bank_sampah_id', $selectedBankId);
                     }
                     $total = $query->sum('aktual_total');
                     $periodData[] = [
-                        'label' => $day->format('D'),
+                        'label' => $day->format('D, d M'),
                         'value' => (float) $total
                     ];
                 }
             } elseif ($periode === 'bulanan') {
-                // 30 hari
-                for ($i = 0; $i < 30; $i++) {
+                // Jumlah hari sesuai bulan
+                $daysInMonth = $start->daysInMonth;
+                for ($i = 0; $i < $daysInMonth; $i++) {
                     $day = $start->copy()->addDays($i);
                     $query = \App\Models\Setoran::where('status', 'selesai')
-                        ->whereBetween('created_at', [$day->startOfDay(), $day->endOfDay()]);
+                        ->whereBetween('created_at', [$day->copy()->startOfDay(), $day->copy()->endOfDay()]);
                     if ($selectedBankId) {
                         $query->where('bank_sampah_id', $selectedBankId);
                     }
@@ -489,14 +460,14 @@ class AdminController extends Controller
                     ];
                 }
             } elseif ($periode === 'enam_bulanan') {
-                // 6 bulan (fix: gunakan CarbonPeriod agar seluruh bulan dari $start sampai $end ter-cover)
+                // 6 bulan
                 $months = \Carbon\CarbonPeriod::create($start, '1 month', $end);
                 foreach ($months as $month) {
                     $query = \App\Models\Setoran::where('status', 'selesai')
                         ->whereBetween('created_at', [$month->copy()->startOfMonth(), $month->copy()->endOfMonth()]);
-        if ($selectedBankId) {
-            $query->where('bank_sampah_id', $selectedBankId);
-        }
+                    if ($selectedBankId) {
+                        $query->where('bank_sampah_id', $selectedBankId);
+                    }
                     $total = $query->sum('aktual_total');
                     $periodData[] = [
                         'label' => $month->format('M Y'),
@@ -504,14 +475,14 @@ class AdminController extends Controller
                     ];
                 }
             } elseif ($periode === 'tahunan') {
-                // 12 bulan (fix: gunakan CarbonPeriod)
+                // 12 bulan
                 $months = \Carbon\CarbonPeriod::create($start, '1 month', $end);
                 foreach ($months as $month) {
                     $query = \App\Models\Setoran::where('status', 'selesai')
                         ->whereBetween('created_at', [$month->copy()->startOfMonth(), $month->copy()->endOfMonth()]);
-        if ($selectedBankId) {
-            $query->where('bank_sampah_id', $selectedBankId);
-        }
+                    if ($selectedBankId) {
+                        $query->where('bank_sampah_id', $selectedBankId);
+                    }
                     $total = $query->sum('aktual_total');
                     $periodData[] = [
                         'label' => $month->format('M'),
@@ -519,7 +490,7 @@ class AdminController extends Controller
                     ];
                 }
             } else {
-                // Range custom - tampilkan semua hari jika <= 31, jika > 31 gunakan interval
+                // Range custom
                 $days = $start->diffInDays($end);
                 if ($days <= 31) {
                     $dateRange = \Carbon\CarbonPeriod::create($start, '1 day', $end);
@@ -529,10 +500,10 @@ class AdminController extends Controller
                 }
                 foreach ($dateRange as $day) {
                     $query = \App\Models\Setoran::where('status', 'selesai')
-                        ->whereBetween('created_at', [$day->startOfDay(), $day->endOfDay()]);
-            if ($selectedBankId) {
-                $query->where('bank_sampah_id', $selectedBankId);
-            }
+                        ->whereBetween('created_at', [$day->copy()->startOfDay(), $day->copy()->endOfDay()]);
+                    if ($selectedBankId) {
+                        $query->where('bank_sampah_id', $selectedBankId);
+                    }
                     $total = $query->sum('aktual_total');
                     $periodData[] = [
                         'label' => $day->format('d M'),
@@ -543,9 +514,6 @@ class AdminController extends Controller
             
             $data[$isPrev ? 'previous' : 'current'] = $periodData;
         }
-        
-        // Debug: Log hasil akhir
-        \Log::info('Final Comparison Data', $data);
         
         return $data;
     }
