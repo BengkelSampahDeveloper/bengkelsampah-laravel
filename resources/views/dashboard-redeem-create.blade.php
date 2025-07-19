@@ -1,6 +1,6 @@
 @extends('dashboard')
 
-@section('title', 'Tambah Redeem')
+@section('title', 'Redeem')
 
 @section('content')
 <!DOCTYPE html>
@@ -8,7 +8,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tambah Redeem - Admin Panel</title>
+    <title>Redeem - Admin Panel</title>
     <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
@@ -439,6 +439,84 @@
             to { transform: rotate(360deg); }
         }
 
+        /* Upload Area Styles */
+        .upload-area {
+            border: 2px dashed #E5E6E6;
+            border-radius: 8px;
+            padding: 60px 20px;
+            text-align: center;
+            background: #fafafa;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .upload-area:hover {
+            border-color: #39746E;
+            background: #f0f9ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #39746E;
+            background: #f0f9ff;
+        }
+
+        .upload-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 16px;
+            opacity: 0.5;
+        }
+
+        .upload-text {
+            font-family: 'Urbanist', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6B7271;
+            margin-bottom: 4px;
+        }
+
+        .upload-subtext {
+            font-family: 'Urbanist', sans-serif;
+            font-size: 12px;
+            color: #9CA3AF;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .image-preview {
+            display: none;
+            position: relative;
+            max-width: 300px;
+            margin: 16px auto 0;
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: auto;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .image-remove {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            background: rgba(0, 0, 0, 0.5);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .header {
@@ -484,6 +562,8 @@
             }
         }
     </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 </head>
 <body>
     <!-- Loading Overlay -->
@@ -498,7 +578,7 @@
         <div class="header-left">
             <h1>Poin</h1>
             <span class="header-separator">/</span>
-            <span class="header-subtitle">Tambah Redeem</span>
+            <span class="header-subtitle">Redeem</span>
         </div>
         <div class="user-info">
             <div class="notification"></div>
@@ -560,7 +640,22 @@
 
                 <div class="form-group">
                     <label for="buktiRedeem" class="form-label">Bukti Redeem (Foto)</label>
-                    <input type="file" class="form-input" id="buktiRedeem" name="bukti_redeem" accept="image/*" required>
+                    <div class="upload-area" onclick="triggerFileInput()">
+                        <div class="upload-icon">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <polyline points="7,10 12,15 17,10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div class="upload-text">Pilih Gambar untuk bukti redeem</div>
+                        <div class="upload-subtext">Format: JPG, PNG, WebP (Max: 2MB)</div>
+                    </div>
+                    <input type="file" id="buktiRedeem" name="bukti_redeem" class="file-input" accept="image/*">
+                    <div class="image-preview" id="imagePreview">
+                        <img id="previewImg" src="" alt="Preview">
+                        <button type="button" class="image-remove" onclick="removeImage()">&times;</button>
+                    </div>
                     <small class="form-text">Format: JPG, PNG, JPEG. Maksimal 2MB</small>
                 </div>
             </form>
@@ -570,8 +665,25 @@
         <div id="alertContainer"></div>
     </div>
 
+    <!-- Modal Crop -->
+    <div id="cropModal" style="display:none;position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
+      <div style="background:#fff;padding:20px;border-radius:8px;max-width:90vw;max-height:90vh;">
+        <img id="cropImage" style="max-width:80vw;max-height:70vh;">
+        <div style="margin-top:10px;text-align:right;display:flex;gap:8px;justify-content:flex-end;">
+          <button type="button" id="cropCancelBtn" style="padding:8px 16px;background:transparent;border:1px solid #FDCED1;border-radius:8px;font-family:'Urbanist',sans-serif;font-size:14px;font-weight:600;color:#F73541;cursor:pointer;transition:all 0.2s;">Batal</button>
+          <button type="button" id="cropOkBtn" style="padding:8px 16px;background:#39746E;border:none;border-radius:8px;font-family:'Urbanist',sans-serif;font-size:14px;font-weight:600;color:#DFF0EE;cursor:pointer;transition:all 0.2s;">OK</button>
+        </div>
+      </div>
+    </div>
+
     <script>
         let selectedUser = null;
+        let cropper;
+        const input = document.getElementById('buktiRedeem');
+        const modal = document.getElementById('cropModal');
+        const cropImg = document.getElementById('cropImage');
+        const previewDiv = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
 
         // Loading Functions
         function showLoading(message = 'Memuat...') {
@@ -801,6 +913,96 @@
           val = val.replace(/\./g, '').replace(',', '.');
           document.getElementById('jumlahPointRaw').value = val;
         });
+
+        // File upload and crop functionality
+        function triggerFileInput() {
+            document.getElementById('buktiRedeem').click();
+        }
+
+        function removeImage() {
+            document.getElementById('buktiRedeem').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+            document.querySelector('.upload-area').style.display = 'block';
+        }
+
+        input.addEventListener('change', function(e) {
+          const file = e.target.files[0];
+          if (file) {
+            const url = URL.createObjectURL(file);
+            cropImg.src = url;
+            modal.style.display = 'flex';
+            if (cropper) cropper.destroy();
+            setTimeout(() => {
+              cropper = new Cropper(cropImg, { viewMode: 1 });
+            }, 100);
+          }
+        });
+
+        document.getElementById('cropCancelBtn').onclick = function() {
+          modal.style.display = 'none';
+          if (cropper) cropper.destroy();
+          input.value = '';
+          previewImg.src = '';
+          previewDiv.style.display = 'none';
+          document.querySelector('.upload-area').style.display = 'block';
+        };
+
+        document.getElementById('cropOkBtn').onclick = function() {
+          if (cropper) {
+            cropper.getCroppedCanvas().toBlob(function(blob) {
+              const file = new File([blob], 'bukti-redeem-cropped.jpg', { type: 'image/jpeg' });
+              const dataTransfer = new DataTransfer();
+              dataTransfer.items.add(file);
+              input.files = dataTransfer.files;
+              const url = URL.createObjectURL(blob);
+              previewImg.src = url;
+              previewDiv.style.display = 'block';
+              document.querySelector('.upload-area').style.display = 'none';
+              modal.style.display = 'none';
+              cropper.destroy();
+            }, 'image/jpeg');
+          }
+        };
+
+        // Drag and drop functionality
+        const uploadArea = document.querySelector('.upload-area');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight(e) {
+            uploadArea.classList.add('dragover');
+        }
+        
+        function unhighlight(e) {
+            uploadArea.classList.remove('dragover');
+        }
+        
+        uploadArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                document.getElementById('buktiRedeem').files = files;
+                // previewImage(document.getElementById('buktiRedeem')); // Hapus/disable fungsi previewImage dari onchange input file
+            }
+        }
     </script>
 </body>
 </html>
