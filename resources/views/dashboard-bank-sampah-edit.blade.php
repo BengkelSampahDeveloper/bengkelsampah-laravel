@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Bank Sampah - Admin Panel</title>
     <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet"/>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         * {
@@ -280,6 +281,57 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
+
+        /* File input styling */
+        .file-input-container {
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            border: 2px dashed #E5E6E6;
+            border-radius: 8px;
+            background: #f9fafb;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 60px;
+        }
+
+        .file-input-label:hover {
+            border-color: #39746E;
+            background: #f0f9ff;
+        }
+
+        .file-input-label.has-file {
+            border-color: #39746E;
+            color: #39746E;
+            background: #E3F4F1;
+        }
+
+        .file-input-label.dragover {
+            background-color: #f0f9ff;
+            border-color: #39746E;
+            transform: scale(1.02);
+        }
+
+        .preview-image {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
     </style>
 </head>
 <body>
@@ -289,6 +341,17 @@
             <div class="loading-spinner-large"></div>
             <p id="loadingMessage">Memuat...</p>
         </div>
+    </div>
+
+    <!-- Modal Crop -->
+    <div id="cropModal" style="display:none;position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
+      <div style="background:#fff;padding:20px;border-radius:8px;max-width:90vw;max-height:90vh;">
+        <img id="cropImage" style="max-width:80vw;max-height:70vh;">
+        <div style="margin-top:10px;text-align:right;display:flex;gap:8px;justify-content:flex-end;">
+          <button type="button" id="cropCancelBtn" style="padding:8px 16px;background:transparent;border:1px solid #FDCED1;border-radius:8px;font-family:'Urbanist',sans-serif;font-size:14px;font-weight:600;color:#F73541;cursor:pointer;transition:all 0.2s;">Batal</button>
+          <button type="button" id="cropOkBtn" style="padding:8px 16px;background:#39746E;border:none;border-radius:8px;font-family:'Urbanist',sans-serif;font-size:14px;font-weight:600;color:#DFF0EE;cursor:pointer;transition:all 0.2s;">OK</button>
+        </div>
+      </div>
     </div>
 
     <header class="header">
@@ -349,13 +412,26 @@
                 <div class="form-group">
                     <label class="form-label">Foto Bank Sampah</label>
                     @if($bankSampah->foto)
-                        <div style="margin-bottom: 10px;">
-                            <img src="{{ $bankSampah->foto }}" alt="Foto Bank Sampah" style="max-width: 200px; max-height: 150px; border-radius: 8px;">
+                        <div style="margin-bottom: 12px;">
+                            <label class="form-label">Foto Saat Ini:</label>
+                            <img src="{{ $bankSampah->foto }}" alt="Current photo" class="current-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div style="width:200px;height:150px;background:#f3f4f6;border-radius:8px;display:none;align-items:center;justify-content:center;color:#9ca3af;font-size:14px;text-align:center;">No Image</div>
+                        </div>
+                    @else
+                        <div style="margin-bottom: 12px;">
+                            <label class="form-label">Foto Saat Ini:</label>
+                            <div style="width:200px;height:150px;background:#f3f4f6;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:14px;text-align:center;">No Image</div>
                         </div>
                     @endif
-                    <input type="file" class="form-input" name="foto" accept=".jpeg,.jpg,.png,.webp" id="foto">
+                    <div class="file-input-container">
+                        <input type="file" class="file-input" id="foto" name="foto" accept="image/*">
+                        <label for="foto" class="file-input-label" id="fileLabel">
+                            <span id="fileText">Klik untuk memilih gambar baru atau drag & drop</span>
+                        </label>
+                    </div>
                     <div class="error-message" id="foto_error"></div>
                     <small style="color: #6B7271; font-size: 12px;">Format: JPEG, PNG, JPG, atau WebP. Maksimal: 2MB. Kosongkan jika tidak ingin mengubah foto.</small>
+                    <img id="preview" class="preview-image" style="display: none;">
                 </div>
 
                 <div class="form-group">
@@ -372,7 +448,14 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script>
+        let cropper;
+        const input = document.getElementById('foto');
+        const modal = document.getElementById('cropModal');
+        const cropImg = document.getElementById('cropImage');
+        const preview = document.getElementById('preview');
+
         // Loading helper functions
         function showLoading(message = 'Memuat...') {
             document.getElementById('loadingMessage').textContent = message;
@@ -439,6 +522,91 @@
         function goBack() {
             showLoading('Kembali ke halaman bank sampah...');
             window.location.href = '{{ route("dashboard.bank") }}';
+        }
+
+        // File input handling
+        document.getElementById('foto').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                cropImg.src = url;
+                modal.style.display = 'flex';
+                if (cropper) cropper.destroy();
+                setTimeout(() => {
+                    cropper = new Cropper(cropImg, { viewMode: 1 });
+                }, 100);
+            }
+        });
+
+        // Crop modal event listeners
+        document.getElementById('cropCancelBtn').onclick = function() {
+            modal.style.display = 'none';
+            if (cropper) cropper.destroy();
+            input.value = '';
+            preview.src = '';
+            preview.style.display = 'none';
+            document.getElementById('fileText').textContent = 'Klik untuk memilih gambar baru atau drag & drop';
+            document.getElementById('fileLabel').classList.remove('has-file');
+        };
+
+        document.getElementById('cropOkBtn').onclick = function() {
+            if (cropper) {
+                cropper.getCroppedCanvas().toBlob(function(blob) {
+                    const file = new File([blob], 'bank-sampah-cropped.jpg', { type: 'image/jpeg' });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    input.files = dataTransfer.files;
+                    const url = URL.createObjectURL(blob);
+                    preview.src = url;
+                    preview.style.display = 'block';
+                    document.getElementById('fileText').textContent = file.name;
+                    document.getElementById('fileLabel').classList.add('has-file');
+                    modal.style.display = 'none';
+                    cropper.destroy();
+                }, 'image/jpeg');
+            }
+        };
+
+        // Drag and drop functionality
+        const fileLabel = document.getElementById('fileLabel');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileLabel.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileLabel.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileLabel.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight(e) {
+            fileLabel.classList.add('dragover');
+        }
+        
+        function unhighlight(e) {
+            fileLabel.classList.remove('dragover');
+        }
+        
+        fileLabel.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                document.getElementById('foto').files = files;
+                // Trigger the change event
+                const event = new Event('change', { bubbles: true });
+                document.getElementById('foto').dispatchEvent(event);
+            }
         }
     </script>
 </body>
