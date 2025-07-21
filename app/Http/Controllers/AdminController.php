@@ -298,6 +298,139 @@ class AdminController extends Controller
         ));
     }
 
+    /**
+     * Store a newly created admin in storage.
+     */
+    public function store(Request $request)
+    {
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|max:255|unique:admins,email',
+                'password' => 'required|string|min:6',
+                'id_bank_sampah' => 'required|exists:bank_sampah,id',
+            ]);
+
+            $admin = \App\Models\Admin::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => bcrypt($request->password),
+                'role' => 'cabang',
+                'id_bank_sampah' => $request->id_bank_sampah,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Admin berhasil dibuat',
+                'data' => $admin
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error in AdminController@store: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat admin: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Display the specified admin.
+     */
+    public function show($id)
+    {
+        try {
+            $admin = \App\Models\Admin::with('bankSampah')->findOrFail($id);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $admin
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error in AdminController@show: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data admin: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update the specified admin in storage.
+     */
+    public function update(Request $request, $id)
+    {
+        try {
+            $admin = \App\Models\Admin::findOrFail($id);
+            
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|max:255|unique:admins,email,' . $id,
+                'password' => 'nullable|string|min:6',
+                'id_bank_sampah' => 'required|exists:bank_sampah,id',
+            ]);
+
+            $data = [
+                'name' => $request->name,
+                'email' => $request->email,
+                'id_bank_sampah' => $request->id_bank_sampah,
+            ];
+
+            if ($request->filled('password')) {
+                $data['password'] = bcrypt($request->password);
+            }
+
+            $admin->update($data);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Admin berhasil diupdate',
+                'data' => $admin
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error in AdminController@update: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengupdate admin: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove the specified admin from storage.
+     */
+    public function destroy($id)
+    {
+        try {
+            $admin = \App\Models\Admin::findOrFail($id);
+            
+            // Prevent deleting the last admin of a bank sampah
+            $bankSampahAdmins = \App\Models\Admin::where('id_bank_sampah', $admin->id_bank_sampah)->count();
+            if ($bankSampahAdmins <= 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak dapat menghapus admin terakhir dari bank sampah ini'
+                ], 400);
+            }
+            
+            $admin->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Admin berhasil dihapus'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error in AdminController@destroy: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus admin: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     private function getDashboardSummary($selectedBankId, $periode, $startDate, $endDate)
     {
         $now = now();

@@ -32,11 +32,13 @@ Menu **User** adalah tempat untuk melihat, mencari, dan mengelola data semua pen
 - **Fungsi:** Mengubah data user yang sudah ada.
 - **Langkah-langkah:**
   1. Klik tombol **Edit** di baris user yang ingin diubah.
-  2. Ubah data: nama, identifier, password baru (opsional).
-  3. Lihat statistik user: poin, XP, total setoran, total sampah (hanya bisa dilihat, tidak bisa diubah manual).
-  4. Klik **Simpan**.
+  2. Ubah data: nama, identifier, password baru (opsional), poin, XP, total setoran, total sampah.
+  3. Klik **Simpan**.
 - **Catatan:**
   - Jika password tidak diisi, password user tidak berubah.
+  - XP dan total setoran bersifat opsional - kosongkan jika tidak ingin mengubah.
+  - XP dan total setoran harus angka bulat, total sampah bisa desimal (contoh: 25,5 kg).
+  - Poin dan total sampah wajib diisi.
   - Perubahan data user harus disetujui oleh user (akan ada notifikasi di form).
 
 ### 4. **Hapus User**

@@ -38,6 +38,7 @@
         .form-select { width: 100%; padding: 12px; border: 1px solid #E5E6E6; border-radius: 8px; font-family: 'Urbanist', sans-serif; font-size: 14px; color: #1e293b; background: #fff; transition: all 0.2s; }
         .form-select:focus { outline: none; border-color: #39746E; }
         .form-info { background: #E3F4F1; border: 1px solid #D1F2EB; border-radius: 8px; padding: 12px; margin-bottom: 1.5rem; color: #0FB7A6; font-size: 14px; }
+        .form-text { font-family: 'Urbanist', sans-serif; font-size: 12px; color: #6B7271; margin-top: 4px; }
         .row { display: flex; gap: 1rem; }
         .col { flex: 1; }
         @media (max-width: 900px) { .main-container { flex-direction: column; } }
@@ -75,6 +76,9 @@
             <div class="form-info" style="background:#FFF3CD; border:1px solid #FFEAA7; color:#856404; margin-bottom:24px;">
                 <strong>Perhatian:</strong> Perubahan data user harus disetujui oleh user. Tindakan ini dapat menyebabkan kebingungan atau ketidakcocokan dengan data-data yang ada pada sistem.
             </div>
+            <div class="form-info" style="background:#E3F4F1; border:1px solid #D1F2EB; color:#0FB7A6; margin-bottom:24px;">
+                <strong>Informasi:</strong> Anda dapat mengedit XP dan total setoran user. Kosongkan field jika tidak ingin mengubah nilai tersebut. XP dan total setoran harus angka bulat. Poin dan total sampah wajib diisi.
+            </div>
             <form id="userEditForm" method="POST" action="{{ route('dashboard.user.update', $user->id) }}">
                 @csrf
                 @method('PUT')
@@ -103,7 +107,7 @@
                 <div class="row">
                     <div class="col">
                         <div class="form-group">
-                            <label class="form-label" for="poin">Poin</label>
+                            <label class="form-label" for="poin">Poin *</label>
                             <input type="text" class="form-input" id="poin" name="poin" value="{{ old('poin', number_format($user->poin, 2, ',', '.')) }}" required>
                             <small class="form-text">Masukkan nilai poin baru (gunakan koma untuk desimal, contoh: 1234,56)</small>
                             @error('poin')
@@ -113,22 +117,34 @@
                     </div>
                     <div class="col">
                         <div class="form-group">
-                            <label class="form-label">XP</label>
-                            <input type="text" class="form-input" value="{{ number_format($user->xp) }}" disabled>
+                            <label class="form-label" for="xp">XP</label>
+                            <input type="text" class="form-input" id="xp" name="xp" value="{{ old('xp', number_format($user->xp, 0, ',', '.')) }}" placeholder="Kosongkan jika tidak ingin mengubah XP">
+                            <small class="form-text">Masukkan nilai XP baru (harus angka bulat, contoh: 1234)</small>
+                            @error('xp')
+                                <div class="form-text" style="color:#F73541;">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col">
                         <div class="form-group">
-                            <label class="form-label">Total Setoran</label>
-                            <input type="text" class="form-input" value="{{ $user->setor }}" disabled>
+                            <label class="form-label" for="setor">Total Setoran</label>
+                            <input type="text" class="form-input" id="setor" name="setor" value="{{ old('setor', number_format($user->setor, 0, ',', '.')) }}" placeholder="Kosongkan jika tidak ingin mengubah total setoran">
+                            <small class="form-text">Masukkan jumlah total setoran baru (harus angka bulat, contoh: 50)</small>
+                            @error('setor')
+                                <div class="form-text" style="color:#F73541;">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
                     <div class="col">
                         <div class="form-group">
-                            <label class="form-label">Total Sampah (kg)</label>
-                            <input type="text" class="form-input" value="{{ number_format($user->sampah, 1) }}" disabled>
+                            <label class="form-label" for="sampah">Total Sampah (kg) *</label>
+                            <input type="text" class="form-input" id="sampah" name="sampah" value="{{ old('sampah', number_format($user->sampah, 1, ',', '.')) }}" required>
+                            <small class="form-text">Masukkan total sampah dalam kg (gunakan koma untuk desimal, contoh: 25,5)</small>
+                            @error('sampah')
+                                <div class="form-text" style="color:#F73541;">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
                 </div>

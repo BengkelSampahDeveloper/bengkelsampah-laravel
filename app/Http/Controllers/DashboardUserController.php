@@ -89,19 +89,66 @@ class DashboardUserController extends Controller
             'name' => 'required|string|max:255',
             'identifier' => ['required', 'string', Rule::unique('users')->ignore($id), 'max:255'],
             'poin' => 'required',
+            'xp' => 'nullable|numeric|min:0',
+            'setor' => 'nullable|numeric|min:0',
+            'sampah' => 'required',
         ]);
 
+        // Process poin input
         $poinInput = str_replace([' ', '.', ','], ['', '', '.'], $request->poin); // Hapus spasi, titik ribuan, koma jadi titik
         if (!is_numeric($poinInput)) {
             return back()->withErrors(['poin' => 'Format poin tidak valid'])->withInput();
         }
         $poin = floatval($poinInput);
 
-        $user->update([
+        // Process xp input (integer only)
+        $xp = null;
+        if ($request->filled('xp')) {
+            $xpInput = str_replace([' ', '.', ','], ['', '', ''], $request->xp);
+            if (!is_numeric($xpInput) || strpos($xpInput, '.') !== false) {
+                return back()->withErrors(['xp' => 'Format XP tidak valid (harus angka bulat)'])->withInput();
+            }
+            $xp = intval($xpInput);
+        }
+
+        // Process setor input (integer only)
+        $setor = null;
+        if ($request->filled('setor')) {
+            $setorInput = str_replace([' ', '.', ','], ['', '', ''], $request->setor);
+            if (!is_numeric($setorInput) || strpos($setorInput, '.') !== false) {
+                return back()->withErrors(['setor' => 'Format total setoran tidak valid (harus angka bulat)'])->withInput();
+            }
+            $setor = intval($setorInput);
+        }
+
+        // Process sampah input (follows poin format - can be decimal)
+        $sampah = null;
+        if ($request->filled('sampah')) {
+            $sampahInput = str_replace([' ', '.', ','], ['', '', '.'], $request->sampah);
+            if (!is_numeric($sampahInput)) {
+                return back()->withErrors(['sampah' => 'Format total sampah tidak valid'])->withInput();
+            }
+            $sampah = floatval($sampahInput);
+        }
+
+        $updateData = [
             'name' => $request->name,
             'identifier' => $request->identifier,
             'poin' => $poin,
-        ]);
+        ];
+
+        // Only update if values are provided
+        if ($xp !== null) {
+            $updateData['xp'] = $xp;
+        }
+        if ($setor !== null) {
+            $updateData['setor'] = $setor;
+        }
+        if ($sampah !== null) {
+            $updateData['sampah'] = $sampah;
+        }
+
+        $user->update($updateData);
 
         return redirect()->route('dashboard.user')->with('success', 'Data user berhasil diperbarui');
     }
