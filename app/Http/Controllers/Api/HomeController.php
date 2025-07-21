@@ -127,6 +127,30 @@ class HomeController extends Controller
         // Get latest 5 articles with kategori relationship
         $articles = Artikel::with('kategori')->latest()->take(5)->get();
 
+        // Get 3 latest active events
+        $events = \App\Models\Event::where('status', 'active')
+            ->orderBy('created_at', 'desc')
+            ->take(3)
+            ->get()
+            ->map(function($event) {
+                return [
+                    'id' => $event->id,
+                    'title' => $event->title,
+                    'description' => $event->description,
+                    'cover' => $event->cover,
+                    'start_datetime' => $event->start_datetime,
+                    'end_datetime' => $event->end_datetime,
+                    'location' => $event->location,
+                    'max_participants' => $event->max_participants,
+                    'status' => $event->status,
+                    'participants_count' => $event->participants()->count(),
+                    'has_result' => method_exists($event, 'hasResult') ? $event->hasResult() : false,
+                    'created_at' => $event->created_at,
+                    'updated_at' => $event->updated_at,
+                    'admin_name' => $event->admin_name ?? null,
+                ];
+            });
+
         // Get unread notification count
         $unreadCount = $this->notificationService->getUnreadCount($user->id);
 
@@ -147,6 +171,7 @@ class HomeController extends Controller
                     'unread_notifications' => $unreadCount,
                 ],
                 'articles' => $articles,
+                'events' => $events ?? [],
                 'app_version' => $appVersion ? [
                     'version' => $appVersion->version,
                     'version_code' => $appVersion->version_code,
