@@ -190,6 +190,7 @@
             justify-content: center;
             border-radius: 20%;
             transition: background-color 0.2s ease;
+            flex-shrink: 0;
         }
 
         .action-btn:hover {
@@ -693,41 +694,51 @@
         }
 
         .kode-cell {
-            min-width: 100px;
-            max-width: 150px;
+            min-width: 80px;
+            max-width: 100px;
         }
 
         .bank-kode {
             font-family: 'Urbanist', sans-serif;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             color: #39746E;
         }
 
         .nama-cell {
-            min-width: 200px;
-            max-width: 300px;
+            min-width: 150px;
+            max-width: 200px;
         }
 
         .bank-nama {
             font-family: 'Urbanist', sans-serif;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 400;
             color: #6B7271;
             margin-bottom: 0.25rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .alamat-cell {
-            min-width: 200px;
-            max-width: 300px;
+            min-width: 150px;
+            max-width: 200px;
         }
 
         .bank-alamat {
             font-family: 'Urbanist', sans-serif;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 400;
             color: #6B7271;
-            line-height: 1.5;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .penanggung-jawab-cell {
@@ -762,8 +773,94 @@
         }
 
         .tipe-layanan-cell {
-            width: 150px;
+            width: 120px;
             text-align: center;
+        }
+
+        .action-buttons-cell {
+            display: flex;
+            gap: 4px;
+            justify-content: flex-start;
+            min-width: 120px;
+            flex-shrink: 0;
+        }
+
+        /* Memastikan kolom action tetap terlihat */
+        th:last-child {
+            position: sticky;
+            right: 0;
+            background: white;
+            z-index: 10;
+            box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
+        }
+
+        td:last-child {
+            position: sticky;
+            right: 0;
+            background: white;
+            z-index: 10;
+            box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Responsive design untuk device kecil */
+        @media (max-width: 1200px) {
+            .kode-cell {
+                min-width: 70px;
+                max-width: 80px;
+            }
+            
+            .nama-cell {
+                min-width: 120px;
+                max-width: 150px;
+            }
+            
+            .alamat-cell {
+                min-width: 120px;
+                max-width: 150px;
+            }
+            
+            .penanggung-jawab-cell {
+                min-width: 100px;
+                max-width: 120px;
+            }
+            
+            .kontak-cell {
+                min-width: 100px;
+                max-width: 120px;
+            }
+            
+            .tipe-layanan-cell {
+                width: 100px;
+            }
+            
+            .action-buttons-cell {
+                min-width: 100px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .table-container {
+                overflow-x: auto;
+            }
+            
+            table {
+                min-width: 800px;
+            }
+            
+            .kode-cell {
+                min-width: 60px;
+                max-width: 70px;
+            }
+            
+            .nama-cell {
+                min-width: 100px;
+                max-width: 120px;
+            }
+            
+            .alamat-cell {
+                min-width: 100px;
+                max-width: 120px;
+            }
         }
 
         /* Loading Styles */
@@ -942,11 +1039,11 @@
                         </th>
                         <th>Kode</th>
                         <th>Foto</th>
-                        <th>Nama Bank Sampah</th>
+                        <th>Nama</th>
                         <th>Alamat</th>
-                        <th>Penanggung Jawab</th>
+                        <th>PIC</th>
                         <th>Kontak</th>
-                        <th>Tipe Layanan</th>
+                        <th>Layanan</th>
                         <th>Maps</th>
                         <th>Aksi</th>
                     </tr>
