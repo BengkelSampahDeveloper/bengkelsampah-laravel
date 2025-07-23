@@ -17,10 +17,6 @@ class AdminController extends Controller
         $otpController = new \App\Http\Controllers\Api\OtpController();
         $zenzivaOtpBalance = $otpController->getZenzivaOtpBalance();
         
-        // Get real Zenziva balance data for setor
-        $whatsappService = new \App\Services\WhatsAppService();
-        $zenzivaSetorBalance = $whatsappService->getZenzivaSetorBalance();
-        
         // Ganti logika selectedBankId
         $selectedBankId = $isCabang ? $admin->id_bank_sampah : $request->get('bank_sampah_id');
         $periode = $request->get('periode', 'harian');
@@ -287,7 +283,7 @@ class AdminController extends Controller
             }
         }
         return view('dashboard', compact(
-            'bankSampahList','zenzivaOtpBalance','zenzivaSetorBalance','dashboardSummary','comparisonData',
+            'bankSampahList','zenzivaOtpBalance','dashboardSummary','comparisonData',
             'legendCurrent','legendPrevious','totalSampahKg','totalSampahUnit',
             'trendDays','trendValues','statusLabels','statusCounts','topSampah',
             'userGrowthMonths','userGrowthCounts','revenueDays','revenueValues',

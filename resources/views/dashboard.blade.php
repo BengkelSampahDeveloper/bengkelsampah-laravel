@@ -99,12 +99,6 @@
                     OTP: @if(isset($zenzivaOtpBalance['status']) && $zenzivaOtpBalance['status']=='1') Rp{{ $zenzivaOtpBalance['balance'] }} @else <span style="color:#EF4444;">Gagal</span> @endif
                 </div>
             </div>
-            <div style="background:#E8F5E8;border-radius:10px;padding:6px 12px;display:flex;align-items:center;gap:0.5rem;border:1px solid #BBF7D0;">
-                <i class="fas fa-comment-dots" style="font-size:0.9rem;color:#166534;"></i>
-                <div style="font-size:0.85rem;font-weight:600;color:#166534;">
-                    Setor: @if(isset($zenzivaSetorBalance['status']) && $zenzivaSetorBalance['status']=='1') Rp{{ $zenzivaSetorBalance['balance'] }} @else <span style="color:#EF4444;">Gagal</span> @endif
-                </div>
-            </div>
         </div>
         @endif
         
