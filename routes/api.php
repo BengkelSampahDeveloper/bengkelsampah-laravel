@@ -39,7 +39,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/register', [RegisterController::class, 'register']);
 Route::post('/send-otp', [OtpController::class, 'send']);
-Route::post('/forgot', [ForgotController::class, 'forgot']);
+Route::post('/forgot', [ForgotController::class, 'reset']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
