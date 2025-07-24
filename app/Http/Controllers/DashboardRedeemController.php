@@ -110,8 +110,14 @@ class DashboardRedeemController extends Controller
             $file = $request->file('bukti_redeem');
             $fileName = 'redeem_' . time() . '_' . $file->getClientOriginalName();
             
+            // Create upload directory if it doesn't exist
+            $uploadPath = base_path('../uploads/redeem');
+            if (!file_exists($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+            
             // Store file outside Laravel project
-            $file->move(public_path('../uploads/redeem'), $fileName);
+            $file->move($uploadPath, $fileName);
             $fileUrl = env('APP_URL') . '/uploads/redeem/' . $fileName;
 
             // Create point record for redeem
@@ -155,8 +161,8 @@ class DashboardRedeemController extends Controller
             DB::rollback();
             
             // Delete uploaded file if exists
-            if (isset($fileUrl) && file_exists(public_path('../uploads/redeem/' . $fileName))) {
-                unlink(public_path('../uploads/redeem/' . $fileName));
+            if (isset($fileUrl) && file_exists(base_path('../uploads/redeem/' . $fileName))) {
+                unlink(base_path('../uploads/redeem/' . $fileName));
             }
             
             return response()->json([
