@@ -37,7 +37,7 @@ class WhatsAppService
             $tipeSetor = ucfirst($setoranData['tipe_setor'] ?? 'N/A');
             $estimasiTotal = number_format($setoranData['estimasi_total'] ?? 0);
             $bankName = $setoranData['bank_sampah_name'] ?? 'N/A';
-            $userIdentifier = $setoranData['user_identifier'] ?? 'N/A';
+            $addressPhone = $setoranData['address_phone'] ?? 'N/A';
             $address = $setoranData['address_full_address'] ?? 'N/A';
             $tanggalPenjemputan = $setoranData['tanggal_penjemputan'] ?? 'N/A';
             $waktuPenjemputan = $setoranData['waktu_penjemputan'] ?? 'N/A';
@@ -55,7 +55,7 @@ class WhatsAppService
                     "BodyVariables" => [
                         "#{$setoranId}",
                         "{$userName}",
-                        "{$userIdentifier}",
+                        "{$addressPhone}",
                         "{$tipeSetor}",
                         "Rp {$estimasiTotal}",
                         "{$bankName}",

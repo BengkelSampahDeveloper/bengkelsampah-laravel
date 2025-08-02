@@ -432,7 +432,7 @@
                         <option value="">Pilih Jenis Sampah</option>
                         @foreach(\App\Models\Sampah::all() as $sampah)
                         @php
-                            $price = $sampah->prices()->latest()->first();
+                            $price = $sampah->prices()->where('bank_sampah_id', $transaction->bank_sampah_id)->first();
                             $harga = $price ? $price->harga : 0;
                         @endphp
                         <option value="{{ $sampah->id }}" data-harga="{{ $harga }}" data-satuan="{{ $sampah->satuan }}" data-nama="{{ $sampah->nama }}">

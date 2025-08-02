@@ -480,6 +480,7 @@ class SetoranController extends Controller
             'tipe_setor' => $setoran->tipe_setor,
             'estimasi_total' => $setoran->estimasi_total,
             'bank_sampah_name' => $setoran->bank_sampah_name,
+            'address_phone' => $setoran->address_phone,
             'address_full_address' => $setoran->address_full_address,
             'tanggal_penjemputan' => $setoran->tanggal_penjemputan,
             'waktu_penjemputan' => $setoran->waktu_penjemputan,
